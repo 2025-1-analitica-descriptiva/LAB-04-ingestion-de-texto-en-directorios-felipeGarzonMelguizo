@@ -5,6 +5,10 @@
 Escriba el codigo que ejecute la accion solicitada en cada pregunta.
 """
 
+import zipfile
+import os
+import pandas as pd # type: ignore
+
 
 def pregunta_01():
     """
@@ -71,3 +75,32 @@ def pregunta_01():
 
 
     """
+
+    with zipfile.ZipFile('files/input.zip', 'r') as zip_ref:
+        zip_ref.extractall('./files')
+
+    # Create output directory
+    os.makedirs('files/output', exist_ok=True)
+
+    # Function to process directory and create dataframe, iterating through sentiment folders and text files then returning a DataFrame with phrases and their sentiments
+    def process_directory(base_path):
+        data = []
+        for sentiment in ['positive', 'negative', 'neutral']:
+            sentiment_path = os.path.join(base_path, sentiment)
+            for filename in os.listdir(sentiment_path):
+                file_path = os.path.join(sentiment_path, filename)
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    phrase = file.read().strip()
+                    data.append({
+                        'phrase': phrase,
+                        'target': sentiment
+                    })
+        return pd.DataFrame(data)
+
+    # Process train and test directories
+    train_df = process_directory('files/input/train')
+    test_df = process_directory('files/input/test')
+
+    # Save to CSV files
+    train_df.to_csv('files/output/train_dataset.csv', index=False)
+    test_df.to_csv('files/output/test_dataset.csv', index=False)
